@@ -7,7 +7,10 @@ import about.nowiwr01p.Contact.Telegram
 import about.nowiwr01p.WindowMode.Desktop
 import about.nowiwr01p.WindowMode.Mobile
 import about.nowiwr01p.core_ui.extensions.getScreenHeight
+import about.nowiwr01p.core_ui.extensions.getScreenWidth
 import about.nowiwr01p.core_ui.theme.AppTheme
+import about.nowiwr01p.core_ui.theme.params.colorAccent
+import about.nowiwr01p.core_ui.theme.params.colorAccentSecondary
 import about.nowiwr01p.core_ui.theme.params.colorBackground
 import about.nowiwr01p.core_ui.theme.params.colorBackgroundLight
 import about.nowiwr01p.core_ui.theme.params.colorText
@@ -17,6 +20,8 @@ import about_me.composeapp.generated.resources.ic_github
 import about_me.composeapp.generated.resources.ic_linkedin
 import about_me.composeapp.generated.resources.ic_telegram
 import about_me.composeapp.generated.resources.moonlight_square
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,12 +47,15 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -58,22 +66,20 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.w3c.dom.events.Event
 
-private const val MOBILE_BREAKPOINT = 600
-
 @Composable
-fun rememberWindowMode(): WindowMode {
-    val width = remember { mutableStateOf(window.innerWidth) }
-    DisposableEffect(Unit) {
-        val listener: (Event) -> Unit = {
-            width.value = window.innerWidth
-        }
-        window.addEventListener("resize", listener)
-        onDispose {
-            window.removeEventListener("resize", listener)
+fun App() {
+    val mode = rememberWindowMode()
+    CompositionLocalProvider(LocalWindowMode provides mode) {
+        AppTheme {
+            Content()
         }
     }
-    return if (width.value < MOBILE_BREAKPOINT) Mobile else Desktop
 }
+
+/**
+ * WINDOW MODE
+ */
+private const val MOBILE_BREAKPOINT = 650
 
 enum class WindowMode {
     Desktop,
@@ -85,14 +91,18 @@ private val LocalWindowMode = staticCompositionLocalOf<WindowMode> {
 }
 
 @Composable
-fun App() {
-    val mode = rememberWindowMode()
-    CompositionLocalProvider(LocalWindowMode provides mode) {
-        AppTheme {
-            Content()
+fun rememberWindowMode(): WindowMode {
+    val width = remember { mutableStateOf(window.innerWidth) }
+    DisposableEffect(Unit) {
+        val listener: (Event) -> Unit = { width.value = window.innerWidth }
+        window.addEventListener("resize", listener)
+        onDispose {
+            window.removeEventListener("resize", listener)
         }
     }
+    return if (width.value < MOBILE_BREAKPOINT) Mobile else Desktop
 }
+
 
 @Composable
 private fun Content() {
@@ -105,23 +115,32 @@ private fun Content() {
         Spacer(modifier = Modifier.weight(1f))
         Avatar()
         Name()
+        SupportButton()
         Spacer(modifier = Modifier.weight(1f))
         ContactsFooter()
     }
 }
 
+/**
+ * AVATAR
+ */
 @Composable
 private fun ColumnScope.Avatar() {
+    val desiredImageSize = 289.dp
+    val possibleImageSize = getScreenWidth() * 0.5f
+    val avatarSize = min(desiredImageSize, possibleImageSize)
     Image(
         painter = painterResource(Res.drawable.moonlight_square),
         contentDescription = null,
         modifier = Modifier
-            .padding(horizontal = 48.dp)
-            .size(289.dp)
+            .size(avatarSize)
             .clip(CircleShape)
     )
 }
 
+/**
+ * NAME
+ */
 @Composable
 private fun Name() {
     BasicText(
@@ -142,6 +161,9 @@ private fun Name() {
     )
 }
 
+/**
+ * CONTACTS
+ */
 @Composable
 private fun ContactsFooter() {
     val shape = remember { RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp) }
@@ -253,3 +275,58 @@ private sealed class Contact(
 }
 
 private val contacts = listOf(Telegram, LinkedIn, GitHub, Email)
+
+/**
+ * SUPPORT
+ */
+@Composable
+private fun SupportButton() {
+    val widthMultiplier by animateFloatAsState(
+        animationSpec = tween(),
+        targetValue = if (LocalWindowMode.current == Mobile) 0.75f else 0.5f
+    )
+    Column(
+        modifier = Modifier.padding(vertical = 24.dp)
+    ) {
+        AppButton(
+            text = "Support",
+            onClick = {},
+            modifier = Modifier.fillMaxWidth(widthMultiplier)
+        )
+        AppButton(
+            text = "Schedule a meeting",
+            onClick = {},
+            backgroundColor = colorAccentSecondary,
+            modifier = Modifier
+                .fillMaxWidth(widthMultiplier)
+                .padding(top = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun AppButton(
+    text: String,
+    shape: Shape = RoundedCornerShape(16.dp),
+    backgroundColor: Color = colorAccent,
+    onClick: () -> Unit,
+    modifier: Modifier
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .height(56.dp)
+            .clip(shape = shape)
+            .background(
+                color = backgroundColor,
+                shape = shape
+            )
+            .clickable { onClick() }
+    ) {
+        Text(
+            text = text,
+            color = colorText,
+            style = MaterialTheme.typography.h5
+        )
+    }
+}

@@ -1,4 +1,4 @@
-package about.nowiwr01p.theme.params
+package about.nowiwr01p.core_ui.theme.params
 
 import androidx.compose.ui.graphics.Color
 

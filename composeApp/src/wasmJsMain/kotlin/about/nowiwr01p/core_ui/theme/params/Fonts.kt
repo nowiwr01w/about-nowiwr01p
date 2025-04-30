@@ -1,4 +1,4 @@
-package about.nowiwr01p.theme.params
+package about.nowiwr01p.core_ui.theme.params
 
 import about_me.composeapp.generated.resources.JetBrainsMono_Bold
 import about_me.composeapp.generated.resources.JetBrainsMono_ExtraBold

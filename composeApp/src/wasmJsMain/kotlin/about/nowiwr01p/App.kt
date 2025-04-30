@@ -290,12 +290,12 @@ private fun SupportButton() {
     ) {
         AppButton(
             text = "Support",
-            onClick = {},
+            onClick = { window.open("https://linktr.ee/nowiwr01p", "_blank") },
             modifier = Modifier.fillMaxWidth(widthMultiplier)
         )
         AppButton(
             text = "Schedule a meeting",
-            onClick = {},
+            onClick = { window.open("https://calendly.com/nowiwr01p", "_blank") },
             backgroundColor = colorAccentSecondary,
             modifier = Modifier
                 .fillMaxWidth(widthMultiplier)
